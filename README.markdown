@@ -16,6 +16,7 @@ Ssdm must remain simple and very quick. Ssdm must facilate the DB usage, but t's
 Performance
 -----------
 Tested with a simple wiki application served by Fapws3 and Mako (for the html templates), Ssdm has showed the following performance results:
+
 * read and write: 281 requests per seconds for Ssdm; 359 requests per second for a pure sql script. 
 * read only: 1226 requests per second for Ssdm; 1643 requests per second for a pure sql script.
 
