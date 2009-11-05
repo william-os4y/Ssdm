@@ -1,0 +1,12 @@
+How to install ssdm?
+====================
+
+As usual, just execute: python setup.py install
+
+This has been tested on Python 2.5 and 2.6. 
+The sqlite3 library must be present. 
+
+That's it ;-). 
+
+Have fun with ssdm. 
+William

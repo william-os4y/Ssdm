@@ -1,0 +1,7 @@
+Here you have the sample taken from the Sqlite website: http://www.sqlite.org/foreignkeys.html
+
+Generate the DB by exusting the following command:
+> sqlite test.db < create.sql
+
+Than you can run the test:
+> python test.py 

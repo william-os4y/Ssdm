@@ -1,0 +1,10 @@
+This is a simple wiki based on Fapws3 and Mako.
+
+To run it, just create a DB:
+> python create_db.py
+
+Then, just start the webserver:
+> python run.py
+
+By default the server is listening on port 8080
+iJust use your prefered browser and go to http://127.0.0.1:8080/page/page1 to see the page called "page1" of this wiki.
