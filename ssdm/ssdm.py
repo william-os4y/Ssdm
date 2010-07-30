@@ -21,6 +21,13 @@ Inspired by Simple Object Relational Mapper proposed by Andy on http://code.acti
 import sqlite3
 import os.path
 
+import sys
+
+#check the python version
+if sys.version_info[0:2]<(2,6):
+    print "SSDM requires python 2.6"
+    sys.exit(1)
+
 
 debug=False
 
