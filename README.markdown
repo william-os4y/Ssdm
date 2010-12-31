@@ -13,6 +13,41 @@ Philosophy:
 -----------
 Ssdm must remain simple and very quick. Ssdm must facilate the DB usage, but t's possible that some specific SQL commands will be required.  
 
+samples:
+--------
+For 2 tables with a foreignkey like this:
+CREATE TABLE artist(
+  artistid    INTEGER PRIMARY KEY,
+  artistname  TEXT
+);
+CREATE TABLE track(
+  trackid     INTEGER,
+  trackname   TEXT,
+  trackartist INTEGER,
+  FOREIGN KEY(trackartist) REFERENCES artist(artistid)
+);
+
+
+You can easily access the data with the following commands:
+>>> t=db.track.get({'trackid':11})
+>>> print t.trackid
+11
+>>> print t.trackartist.artistname
+u'Dean Martin'
+>>> a=db.artist.getall()
+>>> [e.artistname for e in a]
+[u'Dean Martin', u'Frank sinatra']
+>>> newa=db.artist.new()
+>>> newa.artistid=3
+>>> newa.artistname="Beethoven"
+>>> newa.save()
+>>> con.commit()
+>>> a=db.artist.getall()
+>>> [e.artistname for e in a]
+[u'Dean Martin', u'Frank sinatra', u'Beethoven']
+
+please check the samples to better understand
+
 Performance
 -----------
 Tested with a simple wiki application served by Fapws3 and Mako (for the html templates), Ssdm has showed the following performance results:
