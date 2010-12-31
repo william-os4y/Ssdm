@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
  
-import ssdm
+from ssdm import ssdm
 import sys
 import os
 
@@ -15,7 +15,7 @@ except OSError:
 
 con=ssdm.connect(dbfile)
 db=ssdm.scan_db(con)
-r=db.track.get(trackid=11)
+r=db.track.get({'trackid':11})
 print "trackid:",r.trackid
 print "trackartist:", r.trackartist.artistname
 
