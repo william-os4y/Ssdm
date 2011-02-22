@@ -6,7 +6,7 @@ CREATE TABLE artist(
 INSERT INTO "artist" VALUES(1,'Dean Martin');
 INSERT INTO "artist" VALUES(2,'Frank sinatra');
 CREATE TABLE track(
-  trackid     INTEGER,
+  trackid     INTEGER PRIMARY KEY,
   trackname   TEXT,
   trackartist INTEGER,
   FOREIGN KEY(trackartist) REFERENCES artist(artistid)
