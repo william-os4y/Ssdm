@@ -45,7 +45,12 @@ if sqlite3.version_info >= (2,4,1):
 def sqldata(value):
     if not value:
         return 'NULL'
-    return "'%s'" % value
+    if type(value) == str:
+        return "'%s'" % value.translate("'","''")
+    elif type(value) == unicode:
+        return "'%s'" % value.translate("'","''")
+    else:
+        return "'%s'" % value
  
 def sqlite3row_to_dict(row):
     res={}
@@ -128,6 +133,14 @@ class Record(object):
                 self.__dict__["_dflt"][key]=dfltval
                 if pk:
                     self.__dict__["_pk"].append(key)
+        #Following the exceptional case where rowid can be an alias of a integer primary key: http://www.sqlite.org/lang_createtable.html
+        if not self.__dict__["_row"].get("rowid",None):
+            #thise meeans we have an alias between the rowid and the primary key
+            if len(self.__dict__["_pk"]) == 1:
+                pk=self.__dict__["_pk"][0]
+                self.__dict__["_row"]["rowid"] = self.__dict__["_row"][pk]
+            else:
+                self.__dict__["_row"]["rowid"] = None
     def __getitem__(self, key):
         return self.get(key)
     def __setitem__(self, key, val):
@@ -201,7 +214,7 @@ class Record(object):
     def save(self):
         if self._modified==False:
             if debug: print "nothing new"
-            return
+            return None
         if self._new:
             #INSERT INTO table_name (field1, field2, ...) VALUES (value1, value2, value3,...)
             #the following construciton is to assure a perfect sequence between the key list and the value list.
@@ -217,6 +230,9 @@ class Record(object):
             sql+=vals_elems[:-1] #remove the last comma
             sql+=")"
             params_list=vals 
+            self._curobj.execute(sql, params_list)
+            curr_rowid = self._curobj.lastrowid
+            self.__dict__["_row"]["rowid"] = curr_rowid
         else:
             #UPDATE table_name SET column1=value, column2=value2,... WHERE some_column=some_value
             #set_clause=", ".join(["%s=%s" % (e[0],sqldata(e[1])) for e in self._newdata.items()])
@@ -227,17 +243,21 @@ class Record(object):
                 params_list.append(e[1])
             set_clause=", ".join(set_clause_list)
             where_clause=" and ".join(["%s=%s" % (e,sqldata(self._row[str(e)])) for e in self._pk])
+            if not where_clause:
+                raise ValueError, "We don't have primary keys. They are mandatory for updates" 
             sql=u"update %s set %s where %s" % (self._tablename, set_clause, where_clause)
+            self._curobj.execute(sql, params_list)
+            curr_rowid = self._row.get("rowid",None)
         if debug: print "Insert/Update SQL:", sql, params_list
-        self._curobj.execute(sql, params_list)
         #we cleanup the records
         self.__dict__["_modified"]=False
         self.__dict__["_new"]=False
-        #TODO: we update _row with what we know. But what about default values ???? and autoincrement value ????
-        
+        #We update _row with what we know. But because we could have triggers, autoincrement, ... Better to refresh
+        #Record based on the rowid. Up to the users to do it or not
         for key, val in self._newdata.items():
             self.__dict__["_row"][key]=val
         self.__dict__["_newdata"]={}
+        return curr_rowid
     def set(self, data):
         self.__dict__["_newdata"]=data
         self.__dict__["_modified"]=True
@@ -298,7 +318,7 @@ class Table(object):
 
     def get(self, criteria, quiet=False, only_first_record=True):
         "select records based on their primary keys (as dict) and return a recordset"
-        #TODO: get is always against pk. Thus return only one record. In all other case, use select instead
+        #get is always against pk. Thus return only one record. In all other case, use select instead
         sql = self._select_query(table=self.__class__.__name__, pkey=criteria)
         res = RecordSet()
         cursor = self._execute(sql, criteria)
@@ -323,8 +343,7 @@ class Table(object):
     
     def getall(self):
         "return all records in a record set"
-        #TODO: to rename into all()
-        cursor = self._execute("select * from %s" % self.__class__.__name__)
+        cursor = self._execute("select rowid,* from %s" % self.__class__.__name__)
         res=RecordSet()
         res.data=cursor.fetchall()
         cursor.close()
@@ -333,9 +352,9 @@ class Table(object):
     def select(self, where=None, order=None, limit_offset=None, clause=None):
         "select some records and return them in a record set"
         if clause:
-            sql = "select %s from %s " % (clause, self.__class__.__name__)
+            sql = "select rowid,%s from %s " % (clause, self.__class__.__name__)
         else:
-            sql = "select * from %s " % self.__class__.__name__
+            sql = "select rowid,* from %s " % self.__class__.__name__
         if where:
             sql +=" where %s " % where
         if order:
@@ -364,7 +383,7 @@ class Table(object):
         return cursor
 
     def _select_query(self, table=None, pkey=None):
-        template = ''' select * from %s ''' % table
+        template = ''' select rowid,* from %s ''' % table
         values=[]
         if pkey:
             template += ''' where''' 
@@ -402,7 +421,9 @@ class Table(object):
 
     def commit(self):
         self.conn.commit()
-    # TODO: add rollback
+
+    def rollback(self):
+        self.conn.rollback()
 
     def __str__(self):
         return "<%s object at %s>" % (self.__class__.__name__,hex(id(self)))
