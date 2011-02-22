@@ -1,0 +1,6 @@
+
+Generate the DB by exusting the following command:
+> sqlite test.db < create.sql
+
+Than you can run the test:
+> python test.py 
