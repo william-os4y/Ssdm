@@ -335,11 +335,11 @@ class Table(object):
         if where:
             sql +=" where %s " % where
         if debug: print "SQL", sql
-        res = RecordSet()
-        cursor = self._execute(sql)
-        res.data = cursor.fetchall()
+        cursor = self.conn.cursor()
+        cursor.execute(sql)
+        data = cursor.fetchall()
         cursor.close()
-        return res[0]['count']
+        return data[0]['count']
     
     def getall(self):
         "return all records in a record set"
