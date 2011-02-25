@@ -46,9 +46,9 @@ def sqldata(value):
     if not value:
         return 'NULL'
     if type(value) == str:
-        return "'%s'" % value.translate("'","''")
+        return "'%s'" % value.replace("'","''")
     elif type(value) == unicode:
-        return "'%s'" % value.translate("'","''")
+        return "'%s'" % value.replace("'","''")
     else:
         return "'%s'" % value
  
